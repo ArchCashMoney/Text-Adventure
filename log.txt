@@ -1,0 +1,162 @@
+Lab 8 Report – Text-Based Adventure Game
+
+TIME LOG
+
+Date        Time             Duration   Activity
+Wed 3/25    10:00 – 10:30 AM   30 min     Lab session. Decided on a text-based
+                                        adventure game. Brainstormed core concept:
+                                        player navigates rooms, picks up items,
+                                        makes choices that affect the outcome.
+
+Wed 3/25    10:30 – 11:00 AM   30 min     Lab session. Sketched a rough map
+                                        of the game world on paper -- five rooms in
+                                        a branching layout. Listed what the program
+                                        needs to track: current room, inventory,
+                                        and per-room state (item taken, door locked).
+
+Thu 3/25    7:00 – 8:00 PM     60 min     Fleshed out the .h file further. Decided
+                                        on method signatures: Room::getDescription(),
+                                        Room::getExits(), Player::addItem(), and
+                                        Player::hasItem(). Thought through what each
+                                        method needs to do at a high level.
+
+Mon 3/30    11:00 – 11:30 AM    30 min     Set up project directory, created
+                                        placeholder .cpp and .h files. Wrote a
+                                        short main() that prints a welcome message
+                                        and reads the player's name to confirm the
+                                        input loop compiles and runs correctly.
+
+Tue 3/31    6:30 – 7:00 PM   30 min     Named five rooms and assigned each one
+                                        an item or obstacle. Wrote out the full
+                                        exit connections on paper and double-checked
+                                        that the map is connected (no dead-end rooms
+                                        with no way back).
+
+Wed 4/1     10:00 – 10:30 AM   30 min     Wrote pseudocode for the main game loop.
+                                        Listed all player commands to support (go,
+                                        pick up, look, use, quit) and mapped out
+                                        how the program should respond to invalid
+                                        or unrecognized input.
+
+Thu 4/2     5:00 – 5:30 PM   30 min     Worked through win/lose logic and edge
+                                        cases: moving in a blocked direction, using
+                                        an item not in inventory, entering a locked
+                                        room without the key. Wrote these up as
+                                        informal test cases to guide implementation.
+
+Mon 5/5     6:00 – 7:00 PM    60 min     Implemented Room and Player classes based
+                                        on earlier pseudocode. Wired up the exit
+                                        maps for all five rooms and confirmed basic
+                                        movement compiles and runs correctly.
+
+Tue 5/6     7:00 – 8:00 PM    60 min     Implemented inventory pickup and the
+                                        locked-door check. Fixed a bug where
+                                        entering a locked room without the key
+                                        caused a crash instead of printing a
+                                        message.
+
+Wed 5/7     10:00 – 11:00 AM  60 min     Added win/lose conditions and playtested
+                                        all three test cases from the report.
+                                        Cleaned up output formatting and made sure
+                                        unrecognized commands print a helpful error.
+
+Thu 5/8     4:00 – 5:00 PM    60 min     Added comments throughout the code, wrote
+                                        the README, and did a final compile check.
+                                        Packaged everything for submission.
+
+Total: 8 hours 0 minutes
+
+
+ PROS AND CONS OF USING CLASSES (OOP) 
+
+I think OOP is a good fit for this project. The game naturally has distinct things
+-- rooms, a player, items -- and it makes sense to represent each as its own class.
+A Room can store its own description and exits, and a Player can store its own
+inventory and current location. That's a lot cleaner than tracking everything with
+a bunch of separate arrays in main().
+ 
+The main con is that the game is pretty small. Writing full class definitions with
+constructors and getters for only five rooms and a handful of items is probably
+more work than it needs to be. A few structs would honestly do the same job with
+less code.
+ 
+Overall though I think classes are worth it here since the project might grow and
+having things organized from the start will make that easier.
+
+
+ USEFUL DATA STRUCTURE 
+
+I plan to use std::map for this project. The main reason is that a lot of things
+in the game need to be looked up by name. When the player types "go north," I need
+to check if "north" is a valid exit and find out which room it leads to. When they
+type "use key," I need to check if "key" is in their inventory.
+ 
+For the exits, each Room will have a map<string, Room*> where the key is the
+direction and the value is a pointer to the next room. So when the player moves,
+I just look up the direction in the map -- if it's there, they move; if not, I
+print "You can't go that way."
+ 
+For inventory I'll use a map<string, bool> where the key is the item name. That
+makes it easy to check if the player has a specific item without having to loop
+through a vector every time.
+ 
+A vector could work too but I'd have to search through it manually each time,
+which is more code and slower. The map just fits this problem better.
+
+
+ TEST CASES 
+
+Since this is a text-based game driven by user input, testing is a little different
+from a program with purely numeric output. Here are the test cases I used to
+verify the core systems.
+
+Test Case 1 – Enemy blocks movement out of a room: 
+(echo -e "east\nnorth\ngo south\nattack\nattack\nattack\ngo south\nquit" | ./dungeon)
+
+Given: Player is in the Armory (Goblin HP: 30, attack: 8). Player has not yet
+picked up the iron sword so playerAttack is 10.
+Input: "go south"
+Expected output: "The Goblin blocks your way! Defeat it before moving on."
+and currentRoom stays "Armory". Player then types "attack" three times:
+  attack 1 → "You strike the Goblin for 10 damage! (Goblin HP: 20)"
+              "The Goblin hits you for 8 damage! (Your HP: 92)"
+  attack 2 → "You strike the Goblin for 10 damage! (Goblin HP: 10)"
+              "The Goblin hits you for 8 damage! (Your HP: 84)"
+  attack 3 → "You strike the Goblin for 10 damage!"
+              "The Goblin collapses! The path is clear."
+After that, "go south" succeeds and the Dim Corridor description is printed.
+
+Test Case 2 – Locked door and iron key (LinkedList contains() check):
+(# Without key (should be blocked)
+echo -e "east\neast\neast\ngo east\nquit" | ./dungeon
+
+# With key (should open)
+echo -e "east\neast\ntake iron key\nnorth\neast\ngo east\nquit" | ./dungeon)
+
+Given: Player is at Stone Gate. locked == true. Inventory is empty.
+Input: "go east"
+Expected output: "The gate is locked. You need an iron key." Movement blocked.
+Player travels to Ancient Library, types "take iron key":
+  → "You pick up the iron key."  (item added to front of linked list)
+Player returns to Stone Gate, types "go east":
+  → "You use the iron key. The gate swings open!"
+  → room description for Dragon's Lair is printed.
+  → stoneGate.locked is set to false for the rest of the session.
+This exercises LinkedList::add(), LinkedList::contains(), and conditional
+graph traversal in cmdGo().
+
+Test Case 3 – Undo command (stack pop correctness):
+(echo -e "east\nsouth\nundo\nundo\nundo\nquit" | ./dungeon)
+
+Given: Player starts at "Cave Entrance". moveHistory stack is empty.
+  Step 1: "east" → moves to "Dim Corridor", pushes "Cave Entrance" onto stack.
+  Step 2: "south" → moves to "Ancient Library", pushes "Dim Corridor" onto stack.
+  Input: "undo"
+  Expected: "You backtrack to Dim Corridor." + Dim Corridor look printed.
+  Stack now has one entry: "Cave Entrance".
+  Input: "undo"
+  Expected: "You backtrack to Cave Entrance." + Cave Entrance look printed.
+  Stack is now empty.
+  Input: "undo"
+  Expected: "Nothing to undo — you haven't moved yet."
+This confirms LIFO ordering and the empty-stack guard in cmdUndo().

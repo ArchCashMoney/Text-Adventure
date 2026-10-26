@@ -1,0 +1,51 @@
+CS202 Final Project Writeup
+Project: text-adventure
+Student: Andrew Thomas
+
+=== What Went Well ===
+
+The dungeon graph came together cleanly once I committed to the unordered_map
+design. Storing each Room object by name as the key, with the Room's own
+unordered_map<string, string> holding its exits, felt like a natural adjacency
+list — very close to how we discussed graph representations in class. Graph
+traversal in cmdGo() ended up being just a map lookup and a pointer update,
+which made the movement logic easy to read and debug.
+
+The "undo last move" feature was the most satisfying part of the project. Once
+I had a stack<string> storing previous room names, rolling back a move was a
+single pop() call. It's a textbook example of why LIFO stacks are useful, and
+it added genuine gameplay value (backtracking after taking a wrong turn).
+
+=== What Went Less Well ===
+
+Combat is deterministic — the player and enemy always deal fixed damage. I
+originally planned to add a random dice-roll component (using <random>), but
+keeping it deterministic made playtesting much faster and the math easier to
+balance. The goblin and dragon HP values are tuned so the player needs the
+iron sword to realistically beat the dragon, which achieves the intended
+puzzle without randomness.
+
+I also scaled back from a planned 10-room dungeon to 7 rooms to keep the
+project completable within the time I tracked. The core data structures and
+game loop are solid, so the smaller map doesn't hurt the CS202 goals.
+
+=== What I Learned ===
+
+Building the template LinkedList from scratch (rather than using std::list)
+gave me a much clearer picture of how pointer manipulation, copy semantics,
+and destructor cleanup work together. I also got a lot more comfortable with
+C++ templates — writing LinkedList<string> for inventory and knowing I could
+swap in any type was a tangible payoff. The project also reinforced that
+choosing the right data structure first (graph for rooms, stack for undo)
+shapes the entire design and makes individual functions simple.
+
+=== Why I Deserve Full Discretionary Points ===
+
+This project uses three distinct CS202 data structures — a custom template
+linked list, a hash-map-backed graph, and a LIFO stack — each serving a real
+purpose rather than being bolted on. The code is commented at every non-obvious
+decision point, compiles cleanly with a single g++ command, and is fully
+playable with a clear path from start to win. The README is concise and
+complete, the log tracks 8 hours of genuine work across specific tasks, and
+this writeup honestly addresses both successes and trade-offs. Working solo, I
+handled every aspect of the project from design through debugging.
